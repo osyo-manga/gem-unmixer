@@ -1,8 +1,6 @@
 # Unmixer
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/unmixer`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Unmixer is removing mixin modules.
 
 ## Installation
 
@@ -23,7 +21,48 @@ Or install it yourself as:
 ## Usage
 
 ```ruby
+require "unmixer"
 
+# unmixer is using refinements.
+using Unmixer
+
+module M1; end
+module M2; end
+module M3; end
+
+class X
+	include M1
+	prepend M2
+end
+
+p X.ancestors
+# => [M2, X, M1, Object, Kernel, BasicObject]
+
+# Remove include module.
+X.instance_eval { uninclude M1 }
+p X.ancestors
+# => [M2, X, Object, Kernel, BasicObject]
+
+# Not remove prepend module. #uninclude is only include modules.
+X.instance_eval { uninclude M2 }
+p X.ancestors
+# => [M2, X, Object, Kernel, BasicObject]
+
+
+# Remove prepend module.
+X.instance_eval { unprepend M2 }
+p X.ancestors
+# => [X, Object, Kernel, BasicObject]
+
+
+X.extend M3
+p X.singleton_class.ancestors
+# => [#<Class:X>, M3, #<Class:Object>, #<Class:BasicObject>, Class, Module, Object, Kernel, BasicObject]
+
+# Remove extend module.
+X.unextend M3
+p X.singleton_class.ancestors
+# => [#<Class:X>, #<Class:Object>, #<Class:BasicObject>, Class, Module, Object, Kernel, BasicObject]
 ```
 
 ## Development
