@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/osyo-manga/gem-unmixer.svg?branch=master)](https://travis-ci.org/osyo-manga/gem-unmixer)
+
 # Unmixer
 
 Unmixer is removing mixin modules.
