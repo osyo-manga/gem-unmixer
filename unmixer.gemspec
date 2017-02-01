@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = %q{Remove mixin modules.}
   spec.description   = %q{Remove mixin modules.}
-  spec.homepage      = "https://github.com/manga_osyo/gem-unmixer"
+  spec.homepage      = "https://github.com/osyo-manga/gem-unmixer"
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
