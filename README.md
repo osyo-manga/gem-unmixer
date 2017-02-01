@@ -65,6 +65,16 @@ p X.singleton_class.ancestors
 X.unextend M3
 p X.singleton_class.ancestors
 # => [#<Class:X>, #<Class:Object>, #<Class:BasicObject>, Class, Module, Object, Kernel, BasicObject]
+
+
+# #extend with block
+X.extend M1 do
+	# mixin only in block.
+	p X.singleton_class.ancestors
+	# => [#<Class:X>, M1, #<Class:Object>, #<Class:BasicObject>, Class, Module, Object, Kernel, BasicObject]
+end
+p X.singleton_class.ancestors
+# => [#<Class:X>, #<Class:Object>, #<Class:BasicObject>, Class, Module, Object, Kernel, BasicObject]
 ```
 
 ## Development
