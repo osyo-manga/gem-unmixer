@@ -21,30 +21,33 @@ module Unmixer
 	refine Object do
 		alias_method :unmixer_original_extend, :extend
 		def unmixer_extend mod
-			unmixer_original_extend mod
+			result = unmixer_original_extend mod
 			
 			if block_given?
 				begin
-					yield(self)
+					result = yield(self)
 				ensure
 					unmixer_unextend mod
 				end
 			end
+			result
 		end
 		alias_method :extend, :unmixer_extend
 
 		def unmixer_unextend mod
-			return unless singleton_class.ancestors.include? mod
+			result = self
+			return result unless singleton_class.ancestors.include? mod
 			
 			singleton_class.__send__ :unmixer_unmixin, mod
 
 			if block_given?
 				begin
-					yield(self)
+					result = yield(self)
 				ensure
 					unmixer_original_extend mod
 				end
 			end
+			result
 		end
 		alias_method :unextend, :unmixer_unextend
 	end

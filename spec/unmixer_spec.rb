@@ -198,6 +198,8 @@ RSpec.describe Unmixer do
 
 		subject{ -> mod { obj.unextend mod } }
 
+		it { expect(subject.call MixerM1).to eq obj }
+		it { expect(subject.call MixerM2).to eq obj }
 		it_behaves_like "モジュールが削除される", MixerM1
 		it_behaves_like "モジュールが削除されない", MixerM2
 
@@ -212,6 +214,9 @@ RSpec.describe Unmixer do
 				@result = obj.singleton_class.ancestors
 			end
 			subject { -> mod { obj.unextend(mod){ @result = obj.singleton_class.ancestors } } }
+
+			it { expect(obj.unextend(MixerM1){ 42 }).to eq 42 }
+			it { expect(obj.unextend(MixerM2){ 42 }).to eq obj }
 
 			context "extend してるモジュールを渡した場合" do
 				it { expect { subject.call MixerM1 }.to change { @result.size }.by(-1) }
@@ -246,6 +251,7 @@ RSpec.describe Unmixer do
 				Class.new {
 				}
 			}
+			it { expect(obj.extend(MixerM1){ 42 }).to eq 42 }
 
 			subject { -> mod { obj.extend(mod){ @result = obj.singleton_class.ancestors } } }
 
