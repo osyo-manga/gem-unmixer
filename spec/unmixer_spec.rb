@@ -225,6 +225,18 @@ RSpec.describe Unmixer do
 
 			let(:klass){ obj.singleton_class }
 			it_behaves_like "モジュールが削除されない", MixerM1
+
+			context "ブロック内で例外が発生した場合" do
+				subject { -> { obj.unextend(MixerM1){ raise } } }
+				it { is_expected.to raise_error  }
+				it { expect {
+					begin
+						subject.call
+					rescue
+					end
+				}.to_not change { obj.singleton_class.ancestors } }
+
+			end
 		end
 	end
 
@@ -244,6 +256,18 @@ RSpec.describe Unmixer do
 			it { expect { subject.call MixerM1 }.to change { @result.include? MixerM1 }.from(false).to(true) }
 
 			it { expect { subject.call MixerM1 }.to_not change { obj.singleton_class.ancestors } }
+
+			context "ブロック内で例外が発生した場合" do
+				subject { -> { obj.extend(MixerM1){ raise } } }
+				it { is_expected.to raise_error  }
+				it { expect {
+					begin
+						subject.call
+					rescue
+					end
+				}.to_not change { obj.singleton_class.ancestors } }
+
+			end
 		end
 	end
 end

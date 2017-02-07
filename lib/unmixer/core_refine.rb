@@ -24,8 +24,11 @@ module Unmixer
 			unmixer_original_extend mod
 			
 			if block_given?
-				yield(self)
-				unmixer_unextend mod
+				begin
+					yield(self)
+				ensure
+					unmixer_unextend mod
+				end
 			end
 		end
 		alias_method :extend, :unmixer_extend
@@ -36,8 +39,11 @@ module Unmixer
 			singleton_class.__send__ :unmixer_unmixin, mod
 
 			if block_given?
-				yield(self)
-				unmixer_original_extend mod
+				begin
+					yield(self)
+				ensure
+					unmixer_original_extend mod
+				end
 			end
 		end
 		alias_method :unextend, :unmixer_unextend
