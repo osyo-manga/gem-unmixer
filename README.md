@@ -92,6 +92,8 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/osyo-m
 
 #### 0.2.0
 
+* Fix `#extend`/`#unextend` result
+
 #### 0.1.0
 * Release
 
