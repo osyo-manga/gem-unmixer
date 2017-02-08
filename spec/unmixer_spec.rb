@@ -215,7 +215,7 @@ RSpec.describe Unmixer do
 			end
 			subject { -> mod { obj.unextend(mod){ @result = obj.singleton_class.ancestors } } }
 
-			it { expect(obj.unextend(MixerM1){ 42 }).to eq 42 }
+			it { expect(obj.unextend(MixerM1){ 42 }).to eq obj }
 			it { expect(obj.unextend(MixerM2){ 42 }).to eq obj }
 
 			context "extend してるモジュールを渡した場合" do
@@ -230,6 +230,12 @@ RSpec.describe Unmixer do
 
 			let(:klass){ obj.singleton_class }
 			it_behaves_like "モジュールが削除されない", MixerM1
+
+			context "ブロック内で break した場合" do
+				subject { -> { obj.unextend(MixerM1){ break 42 } } }
+				it { expect(subject.call).to eq 42 }
+				it { is_expected.to_not change { obj.singleton_class.ancestors } }
+			end
 
 			context "ブロック内で例外が発生した場合" do
 				subject { -> { obj.unextend(MixerM1){ raise } } }
@@ -251,8 +257,7 @@ RSpec.describe Unmixer do
 				Class.new {
 				}
 			}
-			it { expect(obj.extend(MixerM1){ 42 }).to eq 42 }
-
+			it { expect(obj.extend(MixerM1){ 42 }).to eq obj }
 			subject { -> mod { obj.extend(mod){ @result = obj.singleton_class.ancestors } } }
 
 			before do
@@ -263,9 +268,25 @@ RSpec.describe Unmixer do
 
 			it { expect { subject.call MixerM1 }.to_not change { obj.singleton_class.ancestors } }
 
+			context "ブロック内で break した場合" do
+				subject { -> { obj.extend(MixerM1){ break 42 } } }
+				it { expect(subject.call).to eq 42 }
+				it { is_expected.to_not change { obj.singleton_class.ancestors } }
+			end
+
+			context "すでに mixin されてるモジュールを指定した場合" do
+				before do
+					obj.extend(MixerM1)
+				end
+
+				it { expect { subject.call MixerM1 }.to change { @result.size }.by(1) }
+				it { expect { subject.call MixerM1 }.to change { @result.include? MixerM1 }.from(false).to(true) }
+				it { expect { subject.call MixerM1 }.to change { obj.singleton_class.ancestors.include? MixerM1 }.from(true).to(false) }
+			end
+
 			context "ブロック内で例外が発生した場合" do
-				subject { -> { obj.extend(MixerM1){ raise } } }
-				it { is_expected.to raise_error  }
+				subject { -> { obj.extend(MixerM1){ raise "test" } } }
+				it { is_expected.to raise_error "test" }
 				it { expect {
 					begin
 						subject.call

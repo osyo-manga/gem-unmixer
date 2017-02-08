@@ -25,7 +25,7 @@ module Unmixer
 			
 			if block_given?
 				begin
-					result = yield(self)
+					yield(self)
 				ensure
 					unmixer_unextend mod
 				end
@@ -35,19 +35,18 @@ module Unmixer
 		alias_method :extend, :unmixer_extend
 
 		def unmixer_unextend mod
-			result = self
-			return result unless singleton_class.ancestors.include? mod
+			return self unless singleton_class.ancestors.include? mod
 			
 			singleton_class.__send__ :unmixer_unmixin, mod
 
 			if block_given?
 				begin
-					result = yield(self)
+					yield(self)
 				ensure
 					unmixer_original_extend mod
 				end
 			end
-			result
+			self
 		end
 		alias_method :unextend, :unmixer_unextend
 	end
