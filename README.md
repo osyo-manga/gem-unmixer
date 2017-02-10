@@ -90,6 +90,10 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/osyo-m
 
 ## Release Note
 
+#### 0.3.0
+
+* Fix accessibility `#unmixin`/`#uninclude`/`#unprepend` to public.
+
 #### 0.2.0
 
 * Fix `#extend`/`#unextend` result

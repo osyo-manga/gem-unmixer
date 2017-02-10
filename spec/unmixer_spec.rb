@@ -66,7 +66,7 @@ RSpec.describe Unmixer do
 	}
 
 	context "Module#unmixin" do
-		subject(:subject){ -> mod { klass.instance_eval { unmixin mod } } }
+		subject(:subject){ -> mod { klass.unmixin mod } }
 
 		context "スーパークラスで mixin したモジュールを渡した場合" do
 			it_behaves_like "モジュールが削除されない", MixerM1
@@ -106,7 +106,7 @@ RSpec.describe Unmixer do
 	end
 
 	context "#uninclude" do
-		subject(:subject){ -> mod { klass.instance_eval { uninclude mod } } }
+		subject(:subject){ -> mod { klass.uninclude mod } }
 
 		context "スーパークラスで mixin したモジュールを渡した場合" do
 			it_behaves_like "モジュールが削除されない", MixerM1
@@ -146,7 +146,7 @@ RSpec.describe Unmixer do
 	end
 
 	context "#unprepend" do
-		subject(:subject){ -> mod { klass.instance_eval { unprepend mod } } }
+		subject(:subject){ -> mod { klass.unprepend mod } }
 
 		context "スーパークラスで mixin したモジュールを渡した場合" do
 			it_behaves_like "モジュールが削除されない", MixerM1

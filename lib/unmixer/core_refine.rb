@@ -2,8 +2,7 @@ require "unmixer/unmixer"
 
 module Unmixer
 	refine Module do
-		private
-		alias_method :unmixin,   :unmixer_unmixin
+		alias_method :unmixin, :unmixer_unmixin
 
 		def unmixer_uninclude mod, &block
 			return unless ancestors.tap { |it| break it[it.find_index(self)+1..it.find_index(superclass)-1] }.include? mod

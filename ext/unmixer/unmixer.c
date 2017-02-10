@@ -50,5 +50,5 @@ static VALUE rb_m_unmixin(VALUE self, VALUE mod) {
 
 
 void Init_unmixer(void) {
-  rb_define_private_method(rb_cModule, "unmixer_unmixin", RUBY_METHOD_FUNC(rb_m_unmixin), 1);
+  rb_define_method(rb_cModule, "unmixer_unmixin", RUBY_METHOD_FUNC(rb_m_unmixin), 1);
 }
