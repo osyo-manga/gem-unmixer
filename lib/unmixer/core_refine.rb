@@ -5,13 +5,13 @@ module Unmixer
 		alias_method :unmixin, :unmixer_unmixin
 
 		def unmixer_uninclude mod, &block
-			return unless ancestors.tap { |it| break it[it.find_index(self)+1..it.find_index(superclass)-1] }.include? mod
+			return self unless ancestors.tap { |it| break it[it.find_index(self)+1..it.find_index(superclass)-1] }.include? mod
 			unmixer_unmixin mod
 		end
 		alias_method :uninclude, :unmixer_uninclude
 
 		def unmixer_unprepend mod
-			return unless ancestors.tap { |it| break it[0, it.find_index(self)] }.include? mod
+			return self unless ancestors.tap { |it| break it[0, it.find_index(self)] }.include? mod
 			unmixer_unmixin mod
 		end
 		alias_method :unprepend, :unmixer_unprepend

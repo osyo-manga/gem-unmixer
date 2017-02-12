@@ -2,95 +2,106 @@ require "spec_helper"
 
 module UnmixerTest; end
 
-module MixerM1; end
-module MixerM2; end
-module MixerM3; end
-module MixerM4; end
-module MixerM5; end
-module MixerM6; end
-module MixerM7; end
-module MixerM8; end
-module MixerM9; end
-module MixerM10; end
+module None; end
+module SuperPrepend; end
+module SuperInclude; end
+module Include1; end
+module Include2; end
+module Prepend1; end
+module Prepend2; end
+module IncludeInclude; end
+module IncludePrepend; end
+module PrependInclude; end
+module PrependPrepend; end
+module Extend; end
 
 using Unmixer
 
 RSpec.describe Unmixer do
+	let(:mixin?) { -> mod { klass.ancestors.include? mod } }
+
 	shared_examples_for "モジュールが削除される" do |mod|
-		it { expect { subject.call mod }.to change { klass.ancestors.size }.by(-1) }
-		it { expect { subject.call mod }.to change { klass.ancestors.include? mod }.from(true).to(false) }
-		it { expect { subject.call mod }.to_not change { klass.superclass.ancestors } }
+		subject { -> { unmixin.call mod } }
+		it { expect(subject.call).to eq result }
+		it { is_expected.to change { klass.ancestors.size }.by(-1) }
+		it { is_expected.to change { mixin?.call mod }.from(true).to(false) }
+		it { is_expected.to_not change { klass.superclass.ancestors } }
 	end
 
 	shared_examples_for "モジュールが削除されない" do |mod|
-		it { expect { subject.call mod }.to_not change { klass.ancestors } }
-		it { expect { subject.call mod }.to_not raise_error }
+		subject { -> { unmixin.call mod } }
+		it { expect(subject.call).to eq result }
+		it { is_expected.to_not change { klass.ancestors } }
+		it { is_expected.to_not raise_error }
 	end
 
-	shared_examples_for "モジュールの削除" do |mod|
-		subject { -> mod { remove_module.call mod } }
+	shared_context "ブロックが呼ばれる" do |mod|
+		subject { -> &block { unmixin.call mod, &block } }
+		it { expect(subject.call {}).to eq result }
+		it { expect(subject.call { break 42 }).to eq 42 }
+		it { expect { subject.call {} }.to_not change{ klass.ancestors } }
+		it { expect { subject.call { break 42 } }.to_not change{ klass.ancestors } }
+		it { expect { subject.call { @result = 42 } }.to change{ @result }.from(nil).to(42) }
+	end
 
-		it_behaves_like "モジュールが削除される", mod
-
-		context "組み込みのモジュールを指定する" do
-			it_behaves_like "モジュールが削除されない", Kernel
-			it_behaves_like "モジュールが削除されない", Enumerable
-		end
-
-		context "モジュール以外を渡す" do
-			it { expect { subject.call 42 }.to raise_error(TypeError) }
-			it { expect { subject.call Object }.to raise_error(TypeError) }
-		end
+	shared_context "ブロックが呼ばれない" do |mod|
+		subject { -> &block { unmixin.call mod, &block } }
+		it { expect(subject.call {}).to eq result }
+		it { expect(subject.call { break 42 }).to eq result }
+		it { expect { subject.call {} }.to_not change{ klass.ancestors } }
+		it { expect { subject.call { break 42 } }.to_not change{ klass.ancestors } }
+		it { expect { subject.call { @result = 42 } }.to_not change{ @result } }
 	end
 
 	let(:klass) {
 		Class.new(Class.new {
-			prepend MixerM1
-			include MixerM2
+			prepend SuperPrepend
+			include SuperInclude
 		}) {
-			include MixerM3
-			include MixerM4
-			prepend MixerM5
-			prepend MixerM6
+			include Include1
+			include Include2
+			prepend Prepend1
+			prepend Prepend2
 
 			include Module.new {
-				include MixerM7
-				prepend MixerM8
+				include IncludeInclude
+				prepend IncludePrepend
 			}
 
 			prepend Module.new {
-				include MixerM9
-				prepend MixerM10
+				include PrependInclude
+				prepend PrependPrepend
 			}
 		}
 	}
+	subject(:result){ klass }
 
 	context "Module#unmixin" do
-		subject(:subject){ -> mod { klass.unmixin mod } }
+		subject(:unmixin){ -> mod { klass.unmixin mod } }
 
 		context "スーパークラスで mixin したモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除されない", MixerM1
-			it_behaves_like "モジュールが削除されない", MixerM2
+			it_behaves_like "モジュールが削除されない", SuperPrepend
+			it_behaves_like "モジュールが削除されない", SuperInclude
 		end
 
 		context "include したモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除される", MixerM3
-			it_behaves_like "モジュールが削除される", MixerM4
+			it_behaves_like "モジュールが削除される", Include1
+			it_behaves_like "モジュールが削除される", Include2
 		end
 
 		context "prepend したモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除される", MixerM5
-			it_behaves_like "モジュールが削除される", MixerM6
+			it_behaves_like "モジュールが削除される", Prepend1
+			it_behaves_like "モジュールが削除される", Prepend2
 		end
 
 		context "include したモジュールが mixin しているモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除される", MixerM7
-			it_behaves_like "モジュールが削除される", MixerM8
+			it_behaves_like "モジュールが削除される", IncludeInclude
+			it_behaves_like "モジュールが削除される", IncludePrepend
 		end
 
 		context "prepend したモジュールが mixin しているモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除される", MixerM9
-			it_behaves_like "モジュールが削除される", MixerM10
+			it_behaves_like "モジュールが削除される", PrependInclude
+			it_behaves_like "モジュールが削除される", PrependPrepend
 		end
 
 		context "組み込みのモジュールを指定した場合" do
@@ -98,39 +109,39 @@ RSpec.describe Unmixer do
 		end
 
 		context "モジュール以外を渡した場合" do
-			it { expect { subject.call 42 }.to raise_error(TypeError) }
-			it { expect { subject.call Object }.to raise_error(TypeError) }
-			it { expect { subject.call klass }.to raise_error(TypeError) }
-			it { expect { subject.call klass.superclass }.to raise_error(TypeError) }
+			it { expect { unmixin.call 42 }.to raise_error(TypeError) }
+			it { expect { unmixin.call Object }.to raise_error(TypeError) }
+			it { expect { unmixin.call klass }.to raise_error(TypeError) }
+			it { expect { unmixin.call klass.superclass }.to raise_error(TypeError) }
 		end
 	end
 
 	context "#uninclude" do
-		subject(:subject){ -> mod { klass.uninclude mod } }
+		subject(:unmixin){ -> mod { klass.uninclude mod } }
 
 		context "スーパークラスで mixin したモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除されない", MixerM1
-			it_behaves_like "モジュールが削除されない", MixerM2
+			it_behaves_like "モジュールが削除されない", SuperPrepend
+			it_behaves_like "モジュールが削除されない", SuperInclude
 		end
 
 		context "include したモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除される", MixerM3
-			it_behaves_like "モジュールが削除される", MixerM4
+			it_behaves_like "モジュールが削除される", Include1
+			it_behaves_like "モジュールが削除される", Include2
 		end
 
 		context "prepend したモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除されない", MixerM5
-			it_behaves_like "モジュールが削除されない", MixerM6
+			it_behaves_like "モジュールが削除されない", Prepend1
+			it_behaves_like "モジュールが削除されない", Prepend2
 		end
 
 		context "include したモジュールが mixin しているモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除される", MixerM7
-			it_behaves_like "モジュールが削除される", MixerM8
+			it_behaves_like "モジュールが削除される", IncludeInclude
+			it_behaves_like "モジュールが削除される", IncludePrepend
 		end
 
 		context "prepend したモジュールが mixin しているモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除されない", MixerM9
-			it_behaves_like "モジュールが削除されない", MixerM10
+			it_behaves_like "モジュールが削除されない", PrependInclude
+			it_behaves_like "モジュールが削除されない", PrependPrepend
 		end
 
 		context "組み込みのモジュールを指定した場合" do
@@ -138,39 +149,39 @@ RSpec.describe Unmixer do
 		end
 
 		context "モジュール以外を渡した場合" do
-			it { expect { subject.call 42 }.to_not raise_error }
-			it { expect { subject.call Object }.to_not raise_error }
-			it { expect { subject.call klass }.to_not raise_error }
-			it { expect { subject.call klass.superclass }.to_not raise_error }
+			it { expect { unmixin.call 42 }.to_not raise_error }
+			it { expect { unmixin.call Object }.to_not raise_error }
+			it { expect { unmixin.call klass }.to_not raise_error }
+			it { expect { unmixin.call klass.superclass }.to_not raise_error }
 		end
 	end
 
 	context "#unprepend" do
-		subject(:subject){ -> mod { klass.unprepend mod } }
+		subject(:unmixin){ -> mod { klass.unprepend mod } }
 
 		context "スーパークラスで mixin したモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除されない", MixerM1
-			it_behaves_like "モジュールが削除されない", MixerM2
+			it_behaves_like "モジュールが削除されない", SuperPrepend
+			it_behaves_like "モジュールが削除されない", SuperInclude
 		end
 
 		context "include したモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除されない", MixerM3
-			it_behaves_like "モジュールが削除されない", MixerM4
+			it_behaves_like "モジュールが削除されない", Include1
+			it_behaves_like "モジュールが削除されない", Include2
 		end
 
 		context "prepend したモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除される", MixerM5
-			it_behaves_like "モジュールが削除される", MixerM6
+			it_behaves_like "モジュールが削除される", Prepend1
+			it_behaves_like "モジュールが削除される", Prepend2
 		end
 
 		context "include したモジュールが mixin しているモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除されない", MixerM7
-			it_behaves_like "モジュールが削除されない", MixerM8
+			it_behaves_like "モジュールが削除されない", IncludeInclude
+			it_behaves_like "モジュールが削除されない", IncludePrepend
 		end
 
 		context "prepend したモジュールが mixin しているモジュールを渡した場合" do
-			it_behaves_like "モジュールが削除される", MixerM9
-			it_behaves_like "モジュールが削除される", MixerM10
+			it_behaves_like "モジュールが削除される", PrependInclude
+			it_behaves_like "モジュールが削除される", PrependPrepend
 		end
 
 		context "組み込みのモジュールを指定した場合" do
@@ -178,123 +189,55 @@ RSpec.describe Unmixer do
 		end
 
 		context "モジュール以外を渡した場合" do
-			it { expect { subject.call 42 }.to_not raise_error }
-			it { expect { subject.call Object }.to_not raise_error }
-			it { expect { subject.call klass }.to_not raise_error }
-			it { expect { subject.call klass.superclass }.to_not raise_error }
+			it { expect { unmixin.call 42 }.to_not raise_error }
+			it { expect { unmixin.call Object }.to_not raise_error }
+			it { expect { unmixin.call klass }.to_not raise_error }
+			it { expect { unmixin.call klass.superclass }.to_not raise_error }
 		end
 	end
 
 	context "#unextend" do
 		let(:obj){
 			Class.new {
-				extend  MixerM1
-				include MixerM2
+				extend Extend
 			}
 		}
 		let(:klass) {
 			obj.singleton_class
 		}
+		subject(:result){ obj }
 
-		subject{ -> mod { obj.unextend mod } }
+		subject(:unmixin){ -> mod, &block { obj.unextend mod, &block } }
 
-		it { expect(subject.call MixerM1).to eq obj }
-		it { expect(subject.call MixerM2).to eq obj }
-		it_behaves_like "モジュールが削除される", MixerM1
-		it_behaves_like "モジュールが削除されない", MixerM2
+		it { expect(subject.call Extend).to eq obj }
+		it_behaves_like "モジュールが削除される", Extend
+
+		it { expect(subject.call None).to eq obj }
+		it_behaves_like "モジュールが削除されない", None
 
 		context "ブロックを渡した場合" do
-			let(:obj){
-				Class.new {
-					extend MixerM1
-				}
-			}
-
-			before do
-				@result = obj.singleton_class.ancestors
-			end
-			subject { -> mod { obj.unextend(mod){ @result = obj.singleton_class.ancestors } } }
-
-			it { expect(obj.unextend(MixerM1){ 42 }).to eq obj }
-			it { expect(obj.unextend(MixerM2){ 42 }).to eq obj }
-
-			context "extend してるモジュールを渡した場合" do
-				it { expect { subject.call MixerM1 }.to change { @result.size }.by(-1) }
-				it { expect { subject.call MixerM1 }.to change { @result.include? MixerM1 }.from(true).to(false) }
-			end
-
-			context "extend していないモジュールを渡した場合" do
-				let(:klass){ obj.singleton_class }
-				it { expect { subject.call MixerM2 }.to_not change { klass.ancestors } }
-			end
-
-			let(:klass){ obj.singleton_class }
-			it_behaves_like "モジュールが削除されない", MixerM1
-
-			context "ブロック内で break した場合" do
-				subject { -> { obj.unextend(MixerM1){ break 42 } } }
-				it { expect(subject.call).to eq 42 }
-				it { is_expected.to_not change { obj.singleton_class.ancestors } }
-			end
-
-			context "ブロック内で例外が発生した場合" do
-				subject { -> { obj.unextend(MixerM1){ raise } } }
-				it { is_expected.to raise_error  }
-				it { expect {
-					begin
-						subject.call
-					rescue
-					end
-				}.to_not change { obj.singleton_class.ancestors } }
-
-			end
+			it_behaves_like "ブロックが呼ばれる", Extend
+			it_behaves_like "ブロックが呼ばれない", None
+			it { expect { unmixin.call(Extend){ @result = mixin?.call Extend } }.to change{ @result }.from(nil).to(false) }
 		end
 	end
 
 	context "#extend" do
-		context "ブロックを渡した場合" do
-			let(:obj){
-				Class.new {
-				}
+		let(:obj){
+			Class.new {
+				extend Extend
 			}
-			it { expect(obj.extend(MixerM1){ 42 }).to eq obj }
-			subject { -> mod { obj.extend(mod){ @result = obj.singleton_class.ancestors } } }
+		}
+		let(:klass) {
+			obj.singleton_class
+		}
+		subject(:result){ obj }
 
-			before do
-				@result = obj.singleton_class.ancestors
-			end
-			it { expect { subject.call MixerM1 }.to change { @result.size }.by(1) }
-			it { expect { subject.call MixerM1 }.to change { @result.include? MixerM1 }.from(false).to(true) }
+		subject(:unmixin){ -> mod, &block { obj.extend mod, &block } }
 
-			it { expect { subject.call MixerM1 }.to_not change { obj.singleton_class.ancestors } }
-
-			context "ブロック内で break した場合" do
-				subject { -> { obj.extend(MixerM1){ break 42 } } }
-				it { expect(subject.call).to eq 42 }
-				it { is_expected.to_not change { obj.singleton_class.ancestors } }
-			end
-
-			context "すでに mixin されてるモジュールを指定した場合" do
-				before do
-					obj.extend(MixerM1)
-				end
-
-				it { expect { subject.call MixerM1 }.to change { @result.size }.by(1) }
-				it { expect { subject.call MixerM1 }.to change { @result.include? MixerM1 }.from(false).to(true) }
-				it { expect { subject.call MixerM1 }.to change { obj.singleton_class.ancestors.include? MixerM1 }.from(true).to(false) }
-			end
-
-			context "ブロック内で例外が発生した場合" do
-				subject { -> { obj.extend(MixerM1){ raise "test" } } }
-				it { is_expected.to raise_error "test" }
-				it { expect {
-					begin
-						subject.call
-					rescue
-					end
-				}.to_not change { obj.singleton_class.ancestors } }
-
-			end
+		context "ブロックを渡した場合" do
+			it_behaves_like "ブロックが呼ばれる", None
+			it { expect { unmixin.call(None){ @result = mixin?.call None } }.to change{ @result }.from(nil).to(true) }
 		end
 	end
 end
