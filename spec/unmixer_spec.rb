@@ -18,39 +18,35 @@ module Extend; end
 using Unmixer
 
 RSpec.describe Unmixer do
-	let(:mixin?) { -> mod { klass.ancestors.include? mod } }
-
 	shared_examples_for "モジュールが削除される" do |mod|
-		subject { -> { unmixin.call mod } }
+		subject { -> { unmixin mod } }
 		it { expect(subject.call).to eq result }
 		it { is_expected.to change { klass.ancestors.size }.by(-1) }
-		it { is_expected.to change { mixin?.call mod }.from(true).to(false) }
+		it { is_expected.to change { klass.include? mod }.from(true).to(false) }
 		it { is_expected.to_not change { klass.superclass.ancestors } }
 	end
 
 	shared_examples_for "モジュールが削除されない" do |mod|
-		subject { -> { unmixin.call mod } }
+		subject { -> { unmixin mod } }
 		it { expect(subject.call).to eq result }
 		it { is_expected.to_not change { klass.ancestors } }
 		it { is_expected.to_not raise_error }
 	end
 
 	shared_context "ブロックが呼ばれる" do |mod|
-		subject { -> &block { unmixin.call mod, &block } }
-		it { expect(subject.call {}).to eq result }
-		it { expect(subject.call { break 42 }).to eq 42 }
-		it { expect { subject.call {} }.to_not change{ klass.ancestors } }
-		it { expect { subject.call { break 42 } }.to_not change{ klass.ancestors } }
-		it { expect { subject.call { @result = 42 } }.to change{ @result }.from(nil).to(42) }
+		it { expect(subject.call(mod){}).to eq result }
+		it { expect(subject.call(mod){ break 42 }).to eq 42 }
+		it { expect { subject.call(mod){} }.to_not change{ klass.ancestors } }
+		it { expect { subject.call(mod){ break 42 } }.to_not change{ klass.ancestors } }
+		it { expect { subject.call(mod){ @result = 42 } }.to change{ @result }.from(nil).to(42) }
 	end
 
 	shared_context "ブロックが呼ばれない" do |mod|
-		subject { -> &block { unmixin.call mod, &block } }
-		it { expect(subject.call {}).to eq result }
-		it { expect(subject.call { break 42 }).to eq result }
-		it { expect { subject.call {} }.to_not change{ klass.ancestors } }
-		it { expect { subject.call { break 42 } }.to_not change{ klass.ancestors } }
-		it { expect { subject.call { @result = 42 } }.to_not change{ @result } }
+		it { expect(subject.call(mod){}).to eq result }
+		it { expect(subject.call(mod){ break 42 }).to eq result }
+		it { expect { subject.call(mod){} }.to_not change{ klass.ancestors } }
+		it { expect { subject.call(mod){ break 42 } }.to_not change{ klass.ancestors } }
+		it { expect { subject.call(mod){ @result = 42 } }.to_not change{ @result } }
 	end
 
 	let(:klass) {
@@ -77,7 +73,10 @@ RSpec.describe Unmixer do
 	subject(:result){ klass }
 
 	context "Module#unmixin" do
-		subject(:unmixin){ -> mod { klass.unmixin mod } }
+		def unmixin mod
+			klass.unmixin mod
+		end
+# 		subject(:unmixin){ -> mod { klass.unmixin mod } }
 
 		context "スーパークラスで mixin したモジュールを渡した場合" do
 			it_behaves_like "モジュールが削除されない", SuperPrepend
@@ -109,15 +108,17 @@ RSpec.describe Unmixer do
 		end
 
 		context "モジュール以外を渡した場合" do
-			it { expect { unmixin.call 42 }.to raise_error(TypeError) }
-			it { expect { unmixin.call Object }.to raise_error(TypeError) }
-			it { expect { unmixin.call klass }.to raise_error(TypeError) }
-			it { expect { unmixin.call klass.superclass }.to raise_error(TypeError) }
+			it { expect { unmixin 42 }.to raise_error(TypeError) }
+			it { expect { unmixin Object }.to raise_error(TypeError) }
+			it { expect { unmixin klass }.to raise_error(TypeError) }
+			it { expect { unmixin klass.superclass }.to raise_error(TypeError) }
 		end
 	end
 
 	context "#uninclude" do
-		subject(:unmixin){ -> mod { klass.uninclude mod } }
+		def unmixin mod
+			klass.uninclude mod
+		end
 
 		context "スーパークラスで mixin したモジュールを渡した場合" do
 			it_behaves_like "モジュールが削除されない", SuperPrepend
@@ -149,15 +150,17 @@ RSpec.describe Unmixer do
 		end
 
 		context "モジュール以外を渡した場合" do
-			it { expect { unmixin.call 42 }.to_not raise_error }
-			it { expect { unmixin.call Object }.to_not raise_error }
-			it { expect { unmixin.call klass }.to_not raise_error }
-			it { expect { unmixin.call klass.superclass }.to_not raise_error }
+			it { expect { unmixin 42 }.to_not raise_error }
+			it { expect { unmixin Object }.to_not raise_error }
+			it { expect { unmixin klass }.to_not raise_error }
+			it { expect { unmixin klass.superclass }.to_not raise_error }
 		end
 	end
 
 	context "#unprepend" do
-		subject(:unmixin){ -> mod { klass.unprepend mod } }
+		def unmixin mod, &block
+			klass.unprepend mod, &block
+		end
 
 		context "スーパークラスで mixin したモジュールを渡した場合" do
 			it_behaves_like "モジュールが削除されない", SuperPrepend
@@ -189,10 +192,10 @@ RSpec.describe Unmixer do
 		end
 
 		context "モジュール以外を渡した場合" do
-			it { expect { unmixin.call 42 }.to_not raise_error }
-			it { expect { unmixin.call Object }.to_not raise_error }
-			it { expect { unmixin.call klass }.to_not raise_error }
-			it { expect { unmixin.call klass.superclass }.to_not raise_error }
+			it { expect { unmixin 42 }.to_not raise_error }
+			it { expect { unmixin Object }.to_not raise_error }
+			it { expect { unmixin klass }.to_not raise_error }
+			it { expect { unmixin klass.superclass }.to_not raise_error }
 		end
 	end
 
@@ -207,19 +210,22 @@ RSpec.describe Unmixer do
 		}
 		subject(:result){ obj }
 
-		subject(:unmixin){ -> mod, &block { obj.unextend mod, &block } }
+		def unmixin mod, &block
+			obj.unextend mod, &block
+		end
 
-		it { expect(subject.call Extend).to eq obj }
+		it { expect(obj.unextend Extend).to eq obj }
 		it_behaves_like "モジュールが削除される", Extend
 
-		it { expect(subject.call None).to eq obj }
+		it { expect(obj.unextend None).to eq obj }
 		it_behaves_like "モジュールが削除されない", None
 
-		context "ブロックを渡した場合" do
-			it_behaves_like "ブロックが呼ばれる", Extend
-			it_behaves_like "ブロックが呼ばれない", None
-			it { expect { unmixin.call(Extend){ @result = mixin?.call Extend } }.to change{ @result }.from(nil).to(false) }
-		end
+# 		context "ブロックを渡した場合" do
+# 			subject { -> mod, &block { obj.unextend mod, &block } }
+# 			it_behaves_like "ブロックが呼ばれる", Extend
+# 			it_behaves_like "ブロックが呼ばれない", None
+# 			it { expect { unmixin(Extend){ @result = klass.include? Extend } }.to change{ @result }.from(nil).to(false) }
+# 		end
 	end
 
 	context "#extend" do
@@ -231,13 +237,12 @@ RSpec.describe Unmixer do
 		let(:klass) {
 			obj.singleton_class
 		}
-		subject(:result){ obj }
-
-		subject(:unmixin){ -> mod, &block { obj.extend mod, &block } }
+		let(:result){ obj }
 
 		context "ブロックを渡した場合" do
+			subject { -> mod, &block { obj.extend mod, &block } }
 			it_behaves_like "ブロックが呼ばれる", None
-			it { expect { unmixin.call(None){ @result = mixin?.call None } }.to change{ @result }.from(nil).to(true) }
+			it { expect { subject.call(None){ @result = klass.include? None } }.to change{ @result }.from(nil).to(true) }
 		end
 	end
 end

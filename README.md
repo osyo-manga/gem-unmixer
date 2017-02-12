@@ -93,6 +93,7 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/osyo-m
 #### 0.3.0
 
 * Fix accessibility `#unmixin`/`#uninclude`/`#unprepend` to public.
+* Remove `#unextend` with block.
 
 #### 0.2.0
 
