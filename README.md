@@ -44,17 +44,23 @@ p X.ancestors
 X.instance_eval { uninclude M1 }
 p X.ancestors
 # => [M2, X, Object, Kernel, BasicObject]
+p X.ancestors.include? M1
+# => false
 
 # Not remove prepend module. #uninclude is only include modules.
 X.instance_eval { uninclude M2 }
 p X.ancestors
 # => [M2, X, Object, Kernel, BasicObject]
+p X.ancestors.include? M2
+# => true
 
 
 # Remove prepend module.
 X.instance_eval { unprepend M2 }
 p X.ancestors
 # => [X, Object, Kernel, BasicObject]
+p X.ancestors.include? M2
+# => false
 
 
 X.extend M3
@@ -65,6 +71,8 @@ p X.singleton_class.ancestors
 X.unextend M3
 p X.singleton_class.ancestors
 # => [#<Class:X>, #<Class:Object>, #<Class:BasicObject>, Class, Module, Object, Kernel, BasicObject]
+p X.singleton_class.ancestors.include? M3
+# => false
 
 
 # #extend with block
@@ -75,6 +83,9 @@ X.extend M1 do
 end
 p X.singleton_class.ancestors
 # => [#<Class:X>, #<Class:Object>, #<Class:BasicObject>, Class, Module, Object, Kernel, BasicObject]
+p X.singleton_class.ancestors.include? M1
+# => false
+
 ```
 
 ## Development
