@@ -101,6 +101,10 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/osyo-m
 
 ## Release Note
 
+#### 0.4.0
+
+* Add `#include`/`#prepend` with block.
+
 #### 0.3.0
 
 * Fix accessibility `#unmixin`/`#uninclude`/`#unprepend` to public.
