@@ -241,8 +241,55 @@ RSpec.describe Unmixer do
 
 		context "ブロックを渡した場合" do
 			subject { -> mod, &block { obj.extend mod, &block } }
+			it { expect(subject.call(None)).to eq(obj) }
 			it_behaves_like "ブロックが呼ばれる", None
 			it { expect { subject.call(None){ @result = klass.include? None } }.to change{ @result }.from(nil).to(true) }
+
+			it { expect {
+				begin
+					subject.call(None){ raise }
+				rescue
+				end
+			}.to_not change{ klass.ancestors } }
+		end
+	end
+
+	context "#include" do
+		let(:klass) {
+			Class.new
+		}
+
+		context "ブロックを渡した場合" do
+			subject { -> mod, &block { klass.include mod, &block } }
+			it_behaves_like "ブロックが呼ばれる", None
+			it { expect(subject.call(None)).to eq(klass) }
+			it { expect { subject.call(None){ @result = klass.ancestors.first == klass } }.to change{ @result }.from(nil).to(true) }
+			it { expect { subject.call(None){ @result = klass.ancestors[1] == None } }.to change{ @result }.from(nil).to(true) }
+			it { expect {
+				begin
+					subject.call(None){ raise }
+				rescue
+				end
+			}.to_not change{ klass.ancestors } }
+		end
+	end
+
+	context "#prepend" do
+		let(:klass) {
+			Class.new
+		}
+
+		context "ブロックを渡した場合" do
+			subject { -> mod, &block { klass.prepend mod, &block } }
+			it_behaves_like "ブロックが呼ばれる", None
+			it { expect { subject.call(None){ @result = klass.ancestors.first == None } }.to change{ @result }.from(nil).to(true) }
+			it { expect { subject.call(None){ @result = klass.ancestors[1] == klass } }.to change{ @result }.from(nil).to(true) }
+			it { expect {
+				begin
+					subject.call(None){ raise }
+				rescue
+				end
+			}.to_not change{ klass.ancestors } }
 		end
 	end
 end

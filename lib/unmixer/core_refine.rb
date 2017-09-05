@@ -10,6 +10,22 @@ module Unmixer
 		end
 		alias_method :uninclude, :unmixer_uninclude
 
+		alias_method :unmixer_original_include, :include
+		def unmixer_include mod
+			unmixer_original_include mod
+			
+			if block_given?
+				begin
+					yield(self)
+				ensure
+					unmixer_uninclude mod
+				end
+			end
+			self
+		end
+		alias_method :include, :unmixer_include
+
+
 		def unmixer_unprepend mod
 			return self unless ancestors.tap { |it| break it[0, it.find_index(self)] }.include? mod
 			unmixer_unmixin mod
@@ -24,6 +40,21 @@ module Unmixer
 			self
 		end
 		alias_method :unprepend, :unmixer_unprepend
+
+		alias_method :unmixer_original_prepend, :prepend
+		def unmixer_prepend mod
+			unmixer_original_prepend mod
+			
+			if block_given?
+				begin
+					yield(self)
+				ensure
+					unmixer_unprepend mod
+				end
+			end
+			self
+		end
+		alias_method :prepend, :unmixer_prepend
 	end
 
 	refine Object do
