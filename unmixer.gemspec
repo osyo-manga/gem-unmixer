@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
 
   spec.extensions    = %w[ext/unmixer/extconf.rb]
 
-  spec.add_development_dependency "bundler", "~> 1.14"
+  spec.add_development_dependency "bundler", "~> 1.17"
   spec.add_development_dependency "rake", "~> 12.0"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "rake-compiler"

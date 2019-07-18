@@ -5,7 +5,10 @@
 #undef WARN_UNUSED_RESULT
 #endif
 
-#if RUBY_API_VERSION_CODE >= 20400
+#if RUBY_API_VERSION_CODE >= 20600
+#	include "2.6.0/stubs.h"
+#	include "2.6.0/internal.h"
+#elif RUBY_API_VERSION_CODE >= 20400
 #	include "2.4.0/internal.h"
 #elif RUBY_API_VERSION_CODE >= 20300
 #	include "2.3.0/internal.h"
