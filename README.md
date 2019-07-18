@@ -101,6 +101,11 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/osyo-m
 
 ## Release Note
 
+#### 0.5.0
+
+* [Add support Ruby 2.6.0](https://github.com/osyo-manga/gem-unmixer/pull/1)
+  * Thank for @dalehamel.
+
 #### 0.4.0
 
 * Add `#include`/`#prepend` with block.
